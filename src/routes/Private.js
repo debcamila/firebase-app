@@ -18,7 +18,9 @@ export default function Private({ children }) {
             uid: user.uid,
             email: user.email,
           };
+
           localStorage.setItem("@detailUser", JSON.stringify(userData));
+
           setLoading(false);
           setSigned(true);
         } else {
@@ -27,6 +29,7 @@ export default function Private({ children }) {
         }
       });
     }
+    checkLogin();
   }, []);
 
   if (loading) {
