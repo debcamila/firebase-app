@@ -13,12 +13,14 @@ import {
   where,
   doc,
   deleteDoc,
+  updateDoc,
 } from "firebase/firestore";
 
 export default function Admin() {
   const [taskInput, setTaskInput] = useState("");
   const [user, setUser] = useState({});
   const [tasks, setTasks] = useState([]);
+  const [editTask, setEditTask] = useState({});
 
   useEffect(() => {
     async function loadTasks() {
@@ -57,6 +59,11 @@ export default function Admin() {
       return;
     }
 
+    if (editTask?.id) {
+      handleUpdateTask();
+      return;
+    }
+
     await addDoc(collection(db, "tasks"), {
       task: taskInput,
       created: new Date(),
@@ -80,6 +87,28 @@ export default function Admin() {
     await deleteDoc(docRef);
   }
 
+  function handleEditTask(item) {
+    setTaskInput(item.task);
+    setEditTask(item);
+  }
+
+  async function handleUpdateTask() {
+    const docRef = doc(db, "tasks", editTask?.id);
+    await updateDoc(docRef, {
+      task: taskInput,
+    })
+      .then(() => {
+        console.log("Tarefa atualizada com sucesso!");
+        setTaskInput("");
+        setEditTask({});
+      })
+      .catch(() => {
+        console.log("Erro ao atualizar tarefa.");
+        setTaskInput("");
+        setEditTask({});
+      });
+  }
+
   return (
     <div className="admin_container">
       <h1>Minhas Tarefas</h1>
@@ -91,9 +120,15 @@ export default function Admin() {
           onChange={(e) => setTaskInput(e.target.value)}
         />
 
-        <button className="admin_btn_register" type="submit">
-          Registrar nova tarefa
-        </button>
+        {Object.keys(editTask).length > 0 ? (
+          <button className="admin_btn_register" type="submit">
+            Atualizar tarefa
+          </button>
+        ) : (
+          <button className="admin_btn_register" type="submit">
+            Registrar nova tarefa
+          </button>
+        )}
       </form>
 
       {tasks.map((item) => (
@@ -101,7 +136,13 @@ export default function Admin() {
           <p>{item.task}</p>
 
           <div>
-            <button>Editar</button>
+            <button
+              onClick={() => {
+                handleEditTask(item);
+              }}
+            >
+              Editar
+            </button>
             <button
               className="admin_btn_done"
               onClick={() => {
